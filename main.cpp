@@ -1,10 +1,11 @@
 // wxWidgets "Hello World" Program
 // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
-    #include <wx/wx.h>
-    #include <wx/textctrl.h>
-#endif
+#include <wx/wx.h>
+#include <wx/socket.h>
+
+
+
+
 class MyApp : public wxApp
 {
 public:
@@ -18,6 +19,7 @@ public:
     MyFrame();
 private:
     wxTextCtrl *fn_ipText;
+    wxSocketClient *socket;
 
 
 
@@ -28,11 +30,23 @@ private:
     void fnSetMenuBar();
     void fnSetStatusBar();
     void fnSetIpTextEntry();
+    void fnSetSocket();
+    void fnSocketConnect(wxCommandEvent& event);
+    void check_ipv4_format(char *address);
+
+
+    wxDECLARE_EVENT_TABLE();
 };
+
 enum
 {
-    ID_Hello = 1, ID_CONNECT
+    ID_Hello=wxID_HIGHEST, BTN_ID_CONNECT
 };
+
+wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
+    EVT_BUTTON(BTN_ID_CONNECT, MyFrame::fnSocketConnect)
+wxEND_EVENT_TABLE()
+
 wxIMPLEMENT_APP(MyApp);
 bool MyApp::OnInit()
 {
@@ -89,7 +103,7 @@ void MyFrame::fnSetIpTextEntry()
     wxBoxSizer *hsizer = new wxBoxSizer(wxHORIZONTAL);
 
     fn_ipText = new wxTextCtrl(panel,wxID_ANY,"192.168.0.1",wxDefaultPosition,wxSize(300,-1),0,wxDefaultValidator,"iptext");
-    wxButton *button = new wxButton(panel, ID_CONNECT, wxT("Connect"),wxPoint(20, 20));
+    wxButton *button = new wxButton(panel, BTN_ID_CONNECT, wxT("Connect"),wxPoint(20, 20));
 
     hsizer->Add(fn_ipText);
     hsizer->Add(button);
@@ -99,6 +113,39 @@ void MyFrame::fnSetIpTextEntry()
 }
 
 
+void MyFrame::check_ipv4_format(char *address)
+{
+
+}
+
+
+void MyFrame::fnSocketConnect(wxCommandEvent& event)
+{
+    wxIPV4address addr;
+    if(! fn_ipText->GetLineLength(0)){
+        wxLogMessage("Enter Device IP Adress.\r\n");
+    }
+
+    //check_ipv4_format();
+
+    addr.Hostname(fn_ipText->GetValue());
+    addr.Service(8888);
+    socket->Connect(addr, true);
+
+    if(! socket->IsConnected()){
+        wxLogMessage("Unable to connect the IP.\r\n%s",fn_ipText->GetValue());
+    }
+    else{
+        wxLogMessage("Connected to the IP.\r\n%s",fn_ipText->GetValue());
+    }
+
+}
+
+
+void MyFrame::fnSetSocket()
+{
+    socket = new wxSocketClient(wxSOCKET_NONE);
+}
 
 
 MyFrame::MyFrame()
@@ -107,6 +154,7 @@ MyFrame::MyFrame()
     fnSetMenuBar();
     fnSetStatusBar();
     fnSetIpTextEntry();
+    fnSetSocket();
 
 
 }
